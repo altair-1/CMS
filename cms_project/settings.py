@@ -77,11 +77,11 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = 'core.User'
 
 AUTH_ADFS = {
-    'CLIENT_ID': '<your_client_id>',
-    'CLIENT_SECRET': '<your_client_secret>',
-    'TENANT_ID': '<your_tenant_id>',
-    'RELYING_PARTY_ID': '<your_client_id>',
-    'AUDIENCE': '<your_client_id>',
+    'CLIENT_ID': '<client_id>',
+    'CLIENT_SECRET': '<_client_secret>',
+    'TENANT_ID': '<tenant_id>',
+    'RELYING_PARTY_ID': '<client_id>',
+    'AUDIENCE': '<client_id>',
 }
 
 LOGIN_URL = 'django_auth_adfs:login'
