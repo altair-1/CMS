@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DynamiCMS</title>
+</head>
+<body>
+    <h1>Welcome to DynamiCMS</h1>
+    <p>Hello, {{ user.username }}!</p>
+    <p>Your role is: {{ user.role }}</p>
+    <a href="{% url 'django_auth_adfs:logout' %}">Logout</a>
+</body>
+</html>
