@@ -1,12 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 
-{% block title %}Home - DynamiCMS{% endblock %}
+{% block title %}Content List - DynamiCMS{% endblock %}
 
 {% block content %}
-    <h1>Welcome to DynamiCMS</h1>
-    <h2>Latest Content</h2>
+    <h1>Content List</h1>
     <div class="row">
-        {% for content in latest_content %}
+        {% for content in contents %}
             <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-body">

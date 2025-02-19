@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'django_auth_adfs',
+    # 'django_auth_adfs',
 ]
 
 MIDDLEWARE = [
@@ -70,19 +70,19 @@ TEMPLATES = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django_auth_adfs.backend.AdfsAuthCodeBackend',
+    # 'django_auth_adfs.backend.AdfsAuthCodeBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 AUTH_USER_MODEL = 'core.User'
 
-AUTH_ADFS = {
-    'CLIENT_ID': '<client_id>',
-    'CLIENT_SECRET': '<_client_secret>',
-    'TENANT_ID': '<tenant_id>',
-    'RELYING_PARTY_ID': '<client_id>',
-    'AUDIENCE': '<client_id>',
-}
+# AUTH_ADFS = {
+#     'CLIENT_ID': '<client_id>',
+#     'CLIENT_SECRET': '<_client_secret>',
+#     'TENANT_ID': '<tenant_id>',
+#     'RELYING_PARTY_ID': '<client_id>',
+#     'AUDIENCE': '<client_id>',
+# }
 
 LOGIN_URL = 'django_auth_adfs:login'
 LOGIN_REDIRECT_URL = '/'
@@ -99,6 +99,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 
 
 # Password validation
@@ -130,6 +131,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
+LOGOUT_REDIRECT_URL = '/'  # Redirect to home page after logout
 
 
 # Static files (CSS, JavaScript, Images)

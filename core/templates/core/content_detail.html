@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ content.title }} - DynamiCMS{% endblock %}
+
+{% block content %}
+    <h1>{{ content.title }}</h1>
+    <p>Author: {{ content.author.username }}</p>
+    <p>Published: {{ content.published_at|date:"F d, Y" }}</p>
+    <div>
+        {{ content.body|linebreaks }}
+    </div>
+    {% if user.is_authenticated and user == content.author %}
+        <a href="{% url 'edit_content' content.slug %}" class="btn btn-secondary">Edit</a>
+    {% endif %}
+    <h3>Comments</h3>
+    {% for comment in content.comments.all %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p>{{ comment.body }}</p>
+                <small>By {{ comment.author.username }} on {{ comment.created_at|date:"F d, Y" }}</small>
+            </div>
+        </div>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <h4>Add a comment</h4>
+        <form method="post" action="{% url 'add_comment' content.slug %}">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Comment</button>
+        </form>
+    {% endif %}
+{% endblock %}

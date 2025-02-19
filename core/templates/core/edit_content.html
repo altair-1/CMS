@@ -1,0 +1,12 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Content - DynamiCMS{% endblock %}
+
+{% block content %}
+    <h1>Edit Content</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}
