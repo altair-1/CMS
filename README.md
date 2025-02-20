@@ -23,7 +23,13 @@ DynamiCMS is a content management system built with Django.
 
 ## Contributing
 
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please adhere to the project's code style, add tests for new features, and ensure all tests pass before submitting a pull request.
 
 ## License
 
