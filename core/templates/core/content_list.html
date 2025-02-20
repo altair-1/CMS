@@ -3,20 +3,58 @@
 {% block title %}Content List - DynamiCMS{% endblock %}
 
 {% block content %}
-    <h1>Content List</h1>
+    <h1 class="mb-4">Content List</h1>
     <div class="row">
         {% for content in contents %}
             <div class="col-md-4 mb-4">
-                <div class="card">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">{{ content.title }}</h5>
                         <p class="card-text">{{ content.body|truncatewords:30 }}</p>
+                        <p class="text-muted">
+                            <small>
+                                <i class="fas fa-user"></i> {{ content.author.username }} |
+                                <i class="fas fa-calendar"></i> {{ content.created_at|date:"F d, Y" }}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
                         <a href="{% url 'content_detail' content.slug %}" class="btn btn-primary">Read More</a>
                     </div>
                 </div>
             </div>
         {% empty %}
-            <p>No content available.</p>
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    No content available yet. <a href="{% url 'create_content' %}" class="alert-link">Create some content</a>!
+                </div>
+            </div>
         {% endfor %}
     </div>
+
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
 {% endblock %}

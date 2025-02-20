@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Content - DynamiCMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5 shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Delete Content</h2>
+                <p class="text-center">Are you sure you want to delete "<strong>{{ content.title }}</strong>"?</p>
+                <p class="text-center text-muted"><small>This action cannot be undone.</small></p>
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash-alt me-2"></i>Confirm Delete
+                        </button>
+                        <a href="{% url 'content_detail' content.slug %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

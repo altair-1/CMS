@@ -3,21 +3,40 @@
 {% block title %}Home - DynamiCMS{% endblock %}
 
 {% block content %}
-    <h1>Welcome to DynamiCMS</h1>
-    <h2>Latest Content</h2>
+    <div class="jumbotron bg-light p-5 rounded-3 mb-5">
+        <h1 class="display-4">Welcome to DynamiCMS</h1>
+        <p class="lead">A powerful and flexible content management system built with Django.</p>
+        <hr class="my-4">
+        <p>Get started by creating your first piece of content or browsing existing articles.</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'create_content' %}" role="button">Create Content</a>
+    </div>
+
+    <h2 class="mb-4">Latest Content</h2>
     <div class="row">
         {% for content in latest_content %}
             <div class="col-md-4 mb-4">
-                <div class="card">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">{{ content.title }}</h5>
                         <p class="card-text">{{ content.body|truncatewords:30 }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
                         <a href="{% url 'content_detail' content.slug %}" class="btn btn-primary">Read More</a>
                     </div>
                 </div>
             </div>
         {% empty %}
-            <p>No content available.</p>
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    No content available yet. Be the first to <a href="{% url 'create_content' %}" class="alert-link">create some content</a>!
+                </div>
+            </div>
         {% endfor %}
     </div>
+
+    {% if latest_content %}
+        <div class="text-center mt-4">
+            <a href="{% url 'content_list' %}" class="btn btn-secondary btn-lg">View All Content</a>
+        </div>
+    {% endif %}
 {% endblock %}

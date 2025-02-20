@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'widget_tweaks',
     # 'django_auth_adfs',
 ]
 
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.CustomMiddleware',
 ]
 
 ROOT_URLCONF = 'cms_project.urls'
@@ -65,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.global_context',
             ],
         },
     },
@@ -85,7 +88,8 @@ AUTH_USER_MODEL = 'core.User'
 #     'AUDIENCE': '<client_id>',
 # }
 
-LOGIN_URL = 'django_auth_adfs:login'
+LOGIN_URL = '/login/'
+
 LOGIN_REDIRECT_URL = '/'
 
 WSGI_APPLICATION = 'cms_project.wsgi.application'
