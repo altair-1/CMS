@@ -40,8 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'widget_tweaks',
+    'crispy_forms',
     # 'django_auth_adfs',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,13 +101,17 @@ WSGI_APPLICATION = 'cms_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cms_user_management',
+        'USER': 'postgres',
+        'PASSWORD': 'superdb@1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
-
 
 
 # Password validation

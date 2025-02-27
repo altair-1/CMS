@@ -3,16 +3,16 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.text import slugify
-from autoslug import AutoSlugField
+
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
 
 class User(AbstractUser):
-    ROLES = (
-        ('admin', 'Administrator'),
-        ('editor', 'Editor'),
-        ('author', 'Author'),
-        ('viewer', 'Viewer'),
-    )
-    role = models.CharField(max_length=10, choices=ROLES, default='viewer')
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
@@ -65,9 +65,13 @@ class Content(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
-        if Content.objects.filter(slug=self.slug).exists():
-            self.slug = f"{self.slug}-{Content.objects.count() + 1}"
+            base_slug = slugify(self.title)
+            unique_slug = base_slug
+            counter = 1
+            while Content.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

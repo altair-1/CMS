@@ -1,17 +1,29 @@
 from django.contrib import admin
-from .models import User, Category, Content, Comment
+from django.contrib.auth.admin import UserAdmin
+from .models import User, Role, Category, Content, Comment
 from django.utils import timezone
 
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name', 'description')
+
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'role', 'is_staff', 'is_active')
     list_filter = ('role', 'is_staff', 'is_superuser', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'bio', 'avatar')}),
         ('Permissions', {'fields': ('role', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role'),
+        }),
     )
 
 @admin.register(Category)

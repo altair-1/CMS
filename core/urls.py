@@ -9,5 +9,5 @@ urlpatterns = [
     path('content/<slug:slug>/edit/', views.edit_content, name='edit_content'),
     path('content/<slug:slug>/delete/', views.delete_content, name='delete_content'),
     path('content/<slug:slug>/comment/', views.add_comment, name='add_comment'),
-    path('profile/', views.user_profile, name='user_profile'),  # new route for user profile
+    path('profile/', views.user_profile, name='user_profile'),
 ]

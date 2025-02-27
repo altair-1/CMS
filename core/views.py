@@ -6,6 +6,7 @@ from django.db.models import Q
 from .models import Content, Category, Comment
 from .forms import ContentForm, CommentForm
 from django.utils.text import slugify
+from django.contrib.auth.decorators import permission_required
 
 
 def home(request):
@@ -13,51 +14,84 @@ def home(request):
     categories = Category.objects.all()
     return render(request, 'core/home.html', {'latest_content': latest_content, 'categories': categories})
 
+
 def content_list(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
-    all_contents = Content.objects.filter(is_published=True)
-    
+    all_contents = Content.objects.all()  # Allow staff to see all content
+
     if query:
         all_contents = all_contents.filter(Q(title__icontains=query) | Q(body__icontains=query))
     if category:
         all_contents = all_contents.filter(categories__slug=category)
-    
+
     all_contents = all_contents.order_by('-created_at')
     paginator = Paginator(all_contents, 9)  # Show 9 contents per page
     page_number = request.GET.get('page')
     contents = paginator.get_page(page_number)
     categories = Category.objects.all()
-    return render(request, 'core/content_list.html', {'contents': contents, 'categories': categories, 'query': query, 'selected_category': category})
+
+    return render(request, 'core/content_list.html', {
+        'contents': contents,
+        'categories': categories,
+        'query': query,
+        'selected_category': category
+    })
+
 
 def content_detail(request, slug):
-    content = get_object_or_404(Content, slug=slug, is_published=True)
+    content = get_object_or_404(Content, slug=slug)  # Allow staff to see unpublished content
     comments = content.comments.filter(is_approved=True)
     comment_form = CommentForm()
-    return render(request, 'core/content_detail.html', {'content': content, 'comments': comments, 'comment_form': comment_form})
+    return render(request, 'core/content_detail.html', {
+        'content': content,
+        'comments': comments,
+        'comment_form': comment_form
+    })
+
 
 @login_required
+@permission_required('core.add_content', raise_exception=True)
 def create_content(request):
     if request.method == 'POST':
         form = ContentForm(request.POST)
         if form.is_valid():
             content = form.save(commit=False)
             content.author = request.user
-            content.slug = slugify(content.title)
-            if Content.objects.filter(slug=content.slug).exists():
-                count = 1
-                while Content.objects.filter(slug=f"{content.slug}-{count}").exists():
-                    count += 1
-                content.slug = f"{content.slug}-{count}"
+            content.is_published = True
+
+            category_choice = form.cleaned_data.get('category')
+            new_category_name = form.cleaned_data.get('new_category')
+
+            if category_choice == 'new' and new_category_name:
+                category, created = Category.objects.get_or_create(name=new_category_name)
+            elif category_choice and category_choice != 'new':
+                category = Category.objects.get(id=int(category_choice))
+            else:
+                category = None
+
+            base_slug = slugify(content.title)
+            unique_slug = base_slug
+            counter = 1
+            while Content.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            content.slug = unique_slug
+
             content.save()
-            form.save_m2m()  # save many-to-many relationships
+            if category:
+                content.categories.add(category)
+
             messages.success(request, 'Content created successfully!')
             return redirect('content_detail', slug=content.slug)
         else:
             messages.error(request, 'There was an error creating the content. Please check the form.')
+            print(form.errors)
     else:
         form = ContentForm()
+
     return render(request, 'core/create_content.html', {'form': form})
+
 
 @login_required
 def edit_content(request, slug):
@@ -70,7 +104,9 @@ def edit_content(request, slug):
             return redirect('content_detail', slug=content.slug)
     else:
         form = ContentForm(instance=content)
+
     return render(request, 'core/edit_content.html', {'form': form, 'content': content})
+
 
 @login_required
 def delete_content(request, slug):
@@ -79,7 +115,9 @@ def delete_content(request, slug):
         content.delete()
         messages.success(request, 'Content deleted successfully!')
         return redirect('content_list')
+
     return render(request, 'core/delete_content.html', {'content': content})
+
 
 @login_required
 def add_comment(request, slug):
@@ -95,6 +133,7 @@ def add_comment(request, slug):
         else:
             messages.error(request, 'There was an error with your comment. Please try again.')
     return redirect('content_detail', slug=slug)
+
 
 @login_required
 def user_profile(request):
