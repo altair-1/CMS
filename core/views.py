@@ -7,6 +7,7 @@ from .models import Content, Category, Comment
 from .forms import ContentForm, CommentForm
 from django.utils.text import slugify
 from django.contrib.auth.decorators import permission_required
+from django.utils import timezone
 
 
 def home(request):
@@ -40,12 +41,14 @@ def content_list(request):
 
 
 def content_detail(request, slug):
-    content = get_object_or_404(Content, slug=slug)  # Allow staff to see unpublished content
-    comments = content.comments.all()
+    content = get_object_or_404(
+        Content.objects.select_related('author').prefetch_related('categories', 'comments'),
+        slug=slug
+    )
     comment_form = CommentForm()
     return render(request, 'core/content_detail.html', {
         'content': content,
-        'comments': comments,
+        'comments': content.comments.all(),
         'comment_form': comment_form
     })
 
@@ -59,6 +62,7 @@ def create_content(request):
             content = form.save(commit=False)
             content.author = request.user
             content.is_published = True
+            content.published_at = timezone.now() 
 
             category_choice = form.cleaned_data.get('category')
             new_category_name = form.cleaned_data.get('new_category')
@@ -99,7 +103,10 @@ def edit_content(request, slug):
     if request.method == 'POST':
         form = ContentForm(request.POST, instance=content)
         if form.is_valid():
-            content = form.save(commit=False)
+            updated_content = form.save(commit=False)
+
+            if updated_content.is_published and not content.published_at:
+                updated_content.published_at = timezone.now()
 
             category_choice = form.cleaned_data.get('category')
             new_category_name = form.cleaned_data.get('new_category')
@@ -111,12 +118,12 @@ def edit_content(request, slug):
             else:
                 category = None
 
-            content.save()
+            updated_content.save()
             if category:
-                content.categories.set([category])  # Replace existing categories
+                updated_content.categories.set([category])  # Replace existing categories
 
             messages.success(request, 'Content updated successfully!')
-            return redirect('content_detail', slug=content.slug)
+            return redirect('content_detail', slug=updated_content.slug)
         else:
             messages.error(request, 'There was an error updating the content. Please check the form.')
             print(form.errors)
