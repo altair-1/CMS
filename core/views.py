@@ -41,7 +41,7 @@ def content_list(request):
 
 def content_detail(request, slug):
     content = get_object_or_404(Content, slug=slug)  # Allow staff to see unpublished content
-    comments = content.comments.filter(is_approved=True)
+    comments = content.comments.all()
     comment_form = CommentForm()
     return render(request, 'core/content_detail.html', {
         'content': content,
@@ -99,11 +99,32 @@ def edit_content(request, slug):
     if request.method == 'POST':
         form = ContentForm(request.POST, instance=content)
         if form.is_valid():
-            form.save()
+            content = form.save(commit=False)
+
+            category_choice = form.cleaned_data.get('category')
+            new_category_name = form.cleaned_data.get('new_category')
+
+            if category_choice == 'new' and new_category_name:
+                category, created = Category.objects.get_or_create(name=new_category_name)
+            elif category_choice and category_choice != 'new':
+                category = Category.objects.get(id=int(category_choice))
+            else:
+                category = None
+
+            content.save()
+            if category:
+                content.categories.set([category])  # Replace existing categories
+
             messages.success(request, 'Content updated successfully!')
             return redirect('content_detail', slug=content.slug)
+        else:
+            messages.error(request, 'There was an error updating the content. Please check the form.')
+            print(form.errors)
     else:
-        form = ContentForm(instance=content)
+        initial_data = {
+            'category': content.categories.first().id if content.categories.exists() else None,
+        }
+        form = ContentForm(instance=content, initial=initial_data)
 
     return render(request, 'core/edit_content.html', {'form': form, 'content': content})
 
@@ -131,7 +152,11 @@ def add_comment(request, slug):
             comment.save()
             messages.success(request, 'Your comment has been added and is awaiting approval.')
         else:
-            messages.error(request, 'There was an error with your comment. Please try again.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error in {field}: {error}")
+            print(form.errors)  # For debugging
+
     return redirect('content_detail', slug=slug)
 
 

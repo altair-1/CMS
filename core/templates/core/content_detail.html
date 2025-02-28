@@ -28,9 +28,17 @@
     {% endif %}
 </article>
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
 <section class="comments mt-5">
     <h3 class="mb-4">Comments</h3>
-    {% for comment in content.comments.all %}
+    {% for comment in comments %}
         <div class="card mb-3">
             <div class="card-body">
                 <p>{{ comment.body }}</p>
@@ -50,12 +58,24 @@
         <div class="card mt-4">
             <div class="card-body">
                 <h4 class="card-title">Add a Comment</h4>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 <form method="post" action="{% url 'add_comment' content.slug %}">
                     {% csrf_token %}
+                    {% if comment_form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ comment_form.non_field_errors|join:", " }}
+                        </div>
+                    {% endif %}
                     {% for field in comment_form %}
                         <div class="mb-3">
                             {{ field.label_tag }}
-                            {{ field|add_class:"form-control" }}
+                            {{ field }}
                             {% if field.errors %}
                                 <div class="text-danger">
                                     {{ field.errors|join:", " }}
@@ -69,5 +89,6 @@
         </div>
     {% endif %}
 </section>
+</div>
 
 {% endblock %}

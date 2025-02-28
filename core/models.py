@@ -83,7 +83,7 @@ class Comment(models.Model):
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-created_at']

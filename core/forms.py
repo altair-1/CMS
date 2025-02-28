@@ -2,7 +2,6 @@ from django import forms
 from .models import Content, Comment, Category
 from django.core.exceptions import ValidationError
 
-
 class ContentForm(forms.ModelForm):
     category = forms.ChoiceField(
         choices=[],
@@ -27,6 +26,10 @@ class ContentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         categories = Category.objects.all()
         self.fields['category'].choices = [(str(c.id), c.name) for c in categories] + [('new', 'Create new category')]
+
+        # Set initial category if editing an existing content
+        if self.instance.pk and self.instance.categories.exists():
+            self.initial['category'] = str(self.instance.categories.first().id)
 
     def clean(self):
         cleaned_data = super().clean()
