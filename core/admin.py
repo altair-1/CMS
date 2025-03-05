@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Role, Category, Content, Comment
+from .models import User, Role, Category, Content, Comment, Document
 from django.utils import timezone
 
 @admin.register(Role)
@@ -31,6 +31,10 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
 
+class DocumentInline(admin.TabularInline):
+    model = Document
+    extra = 1
+
 @admin.register(Content)
 class ContentAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'is_published', 'published_at', 'created_at', 'updated_at')
@@ -38,8 +42,10 @@ class ContentAdmin(admin.ModelAdmin):
     search_fields = ('title', 'body', 'author__username')
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ('author',)
+    filter_horizontal = ('categories',)
     date_hierarchy = 'created_at'
     actions = ['publish_contents', 'unpublish_contents']
+    inlines = [DocumentInline]
 
     def publish_contents(self, request, queryset):
         updated = queryset.update(is_published=True, published_at=timezone.now())
@@ -71,3 +77,10 @@ class CommentAdmin(admin.ModelAdmin):
         updated = queryset.update(is_approved=False)
         self.message_user(request, f'{updated} comments were successfully unapproved.')
     unapprove_comments.short_description = "Unapprove selected comments"
+
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'content', 'uploaded_by', 'uploaded_at')
+    list_filter = ('uploaded_by', 'uploaded_at', 'content')
+    search_fields = ('title', 'content__title', 'uploaded_by__username')
+    raw_id_fields = ('content', 'uploaded_by')

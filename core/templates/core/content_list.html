@@ -3,36 +3,34 @@
 {% block title %}Content List - DynamiCMS{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Content List</h1>
-    <div class="row">
-        {% for content in contents %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ content.title }}</h5>
-                        <p class="card-text">{{ content.body|truncatewords:30 }}</p>
-                        <p class="text-muted">
-                            <small>
-                                <i class="fas fa-user"></i> {{ content.author.username }} |
-                                <i class="fas fa-calendar"></i> {{ content.created_at|date:"F d, Y" }}
-                            </small>
-                        </p>
-                    </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <a href="{% url 'content_detail' content.slug %}" class="btn btn-primary">Read More</a>
-                    </div>
-                </div>
-            </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info" role="alert">
-                    No content available yet. <a href="{% url 'create_content' %}" class="alert-link">Create some content</a>!
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+<div class="row">
+    <!-- Left side: Tabular content list -->
+    <div class="col-md-6">
+        <h2>Content List</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for content in contents %}
+                <tr>
+                    <td><a href="?content_id={{ content.id }}">{{ content.title }}</a></td>
+                    <td>{{ content.author.username }}</td>
+                    <td>{{ content.created_at|date:"F d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No content available yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    {% if is_paginated %}
+        {% if is_paginated %}
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
@@ -56,5 +54,44 @@
                 {% endif %}
             </ul>
         </nav>
-    {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Right side: Content details -->
+    <div class="col-md-6">
+        <h2>Content Details</h2>
+        {% if selected_content %}
+            <h3>{{ selected_content.title }}</h3>
+            <p class="text-muted">
+                <small>
+                    <i class="fas fa-user"></i> {{ selected_content.author.username }} |
+                    <i class="fas fa-calendar"></i> {{ selected_content.created_at|date:"F d, Y" }}
+                </small>
+            </p>
+            {% if selected_content.categories.all %}
+                <p class="text-muted">
+                    <small>
+                        <i class="fas fa-tags"></i> 
+                        {% for category in selected_content.categories.all %}
+                            {{ category.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </small>
+                </p>
+            {% endif %}
+            <div class="content-body mt-4">
+                {{ selected_content.body|linebreaks }}
+            </div>
+            {% if selected_content.documents.all %}
+                <h4>Attached Documents:</h4>
+                <ul>
+                    {% for doc in selected_content.documents.all %}
+                        <li><a href="{{ doc.file.url }}">{{ doc.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% else %}
+            <p>Select a content item from the list to view details.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
