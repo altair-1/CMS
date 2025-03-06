@@ -66,9 +66,9 @@ def content_detail(request, slug):
 @permission_required('core.add_content', raise_exception=True)
 def create_content(request):
     if request.method == 'POST':
-        content_form = ContentForm(request.POST, request.FILES)  # Added request.FILES for featured_image
+        content_form = ContentForm(request.POST, request.FILES)
         document_form = DocumentForm(request.POST, request.FILES)
-        
+
         if content_form.is_valid():
             content = content_form.save(commit=False)
             content.author = request.user
@@ -78,12 +78,10 @@ def create_content(request):
             # Handle categories
             categories = content_form.cleaned_data.get('categories')
             new_category_name = content_form.cleaned_data.get('new_category')
-
             if new_category_name:
                 category, created = Category.objects.get_or_create(name=new_category_name)
                 if categories:
-                    categories = list(categories)
-                    categories.append(category)
+                    categories = list(categories) + [category]
                 else:
                     categories = [category]
 
@@ -100,15 +98,17 @@ def create_content(request):
             if categories:
                 content.categories.set(categories)
 
-            # Handle document upload only if a file is provided
+            # Handle document upload
             if 'file' in request.FILES:
                 if document_form.is_valid():
                     document = document_form.save(commit=False)
                     document.content = content
+                    document.uploaded_by = request.user
                     document.save()
                 else:
-                    for error in document_form.errors.values():
-                        messages.warning(request, f"Document upload issue: {error}")
+                    for field, errors in document_form.errors.items():
+                        for error in errors:
+                            messages.warning(request, f"Document {field}: {error}")
 
             messages.success(request, 'Content created successfully!')
             return redirect('content_list')
@@ -116,6 +116,19 @@ def create_content(request):
             for field, errors in content_form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field.capitalize()}: {error}")
+            
+            # Print form errors to console for debugging
+            print("Content Form Errors:", content_form.errors)
+
+        # Handle document form errors
+        if document_form.is_bound and not document_form.is_valid():
+            for field, errors in document_form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Document {field.capitalize()}: {error}")
+            
+            # Print form errors to console for debugging
+            print("Document Form Errors:", document_form.errors)
+
     else:
         content_form = ContentForm()
         document_form = DocumentForm()
@@ -124,6 +137,65 @@ def create_content(request):
         'content_form': content_form,
         'document_form': document_form,
     })
+
+@login_required
+def dashboard(request):
+    if request.method == 'POST':
+        content_form = ContentForm(request.POST, request.FILES)
+        document_form = DocumentForm(request.POST, request.FILES)
+        
+        if content_form.is_valid():
+            content = content_form.save(commit=False)
+            content.author = request.user
+            content.is_published = True
+            content.published_at = timezone.now()
+            content.save()
+            
+            # Handle categories
+            categories = content_form.cleaned_data.get('categories')
+            new_category_name = content_form.cleaned_data.get('new_category')
+            
+            if new_category_name:
+                new_category, _ = Category.objects.get_or_create(name=new_category_name)
+                categories = list(categories) if categories else []
+                categories.append(new_category)
+            
+            if categories:
+                content.categories.set(categories)
+            
+            # Handle document upload only if a file is provided
+            if 'file' in request.FILES:
+                if document_form.is_valid():
+                    document = document_form.save(commit=False)
+                    document.uploaded_by = request.user
+                    document.content = content
+                    document.save()
+                else:
+                    for field, errors in document_form.errors.items():
+                        for error in errors:
+                            messages.warning(request, f"Document {field}: {error}")
+            
+            messages.success(request, 'Content created successfully!')
+            return redirect('content_list')
+        else:
+            for field, errors in content_form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.capitalize()}: {error}")
+            print("Content form errors:", content_form.errors)
+    else:
+        content_form = ContentForm()
+        document_form = DocumentForm()
+    
+    categories = Category.objects.all()
+    contents = Content.objects.filter(author=request.user).order_by('-created_at')[:5]
+    
+    return render(request, 'core/dashboard.html', {
+        'content_form': content_form,
+        'document_form': document_form,
+        'categories': categories,
+        'contents': contents,
+    })
+
 
 @login_required
 def edit_content(request, slug):
@@ -204,54 +276,3 @@ def user_profile(request):
 def update_content_timestamp(content_id):
     with connection.cursor() as cursor:
         cursor.execute("SELECT update_content_modified(%s)", [content_id])
-
-
-@login_required
-def dashboard(request):
-    if request.method == 'POST':
-        content_form = ContentForm(request.POST)
-        document_form = DocumentForm(request.POST, request.FILES)
-        
-        if content_form.is_valid():
-            # Handle content creation
-            content = content_form.save(commit=False)
-            content.author = request.user
-            content.is_published = True
-            content.published_at = timezone.now()
-            content.save()
-            
-            # Handle category
-            category_choice = request.POST.get('category')
-            if category_choice == 'new':
-                new_category_name = request.POST.get('new_category')
-                if new_category_name:
-                    category, created = Category.objects.get_or_create(name=new_category_name)
-                    content.categories.add(category)
-            elif category_choice:
-                category = Category.objects.get(id=int(category_choice))
-                content.categories.add(category)
-            
-            # Handle document upload if provided
-            if document_form.is_valid() and 'file' in request.FILES:
-                document = document_form.save(commit=False)
-                document.uploaded_by = request.user
-                document.content = content
-                document.save()
-            
-            messages.success(request, 'Content created successfully!')
-            return redirect('content_list')
-        else:
-            messages.error(request, 'There was an error creating the content. Please check the form.')
-    else:
-        content_form = ContentForm()
-        document_form = DocumentForm()
-    
-    categories = Category.objects.all()
-    contents = Content.objects.filter(author=request.user).order_by('-created_at')[:5]  # Show only recent 5
-    
-    return render(request, 'core/dashboard.html', {
-        'content_form': content_form,
-        'document_form': document_form,
-        'categories': categories,
-        'contents': contents,
-    })

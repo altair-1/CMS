@@ -1,4 +1,4 @@
-from django.db import models, migrations
+from django.db import models, migrations, transaction
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.urls import reverse
@@ -119,6 +119,22 @@ class Content(models.Model):
 
     def get_absolute_url(self):
         return reverse('content_detail', kwargs={'slug': self.slug})
+    
+class Document(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)  #optional
+    file = models.FileField(upload_to='documents/')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['uploaded_at']),
+        ]
 
 class Comment(models.Model):
     content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='comments')
@@ -142,21 +158,6 @@ class Comment(models.Model):
         self.is_approved = True
         self.save()
 
-class Document(models.Model):
-    title = models.CharField(max_length=255)
-    content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)  #optional
-    file = models.FileField(upload_to='documents/')
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['title']),
-            models.Index(fields=['uploaded_at']),
-        ]
 
 class Migration(migrations.Migration):
     dependencies = [
