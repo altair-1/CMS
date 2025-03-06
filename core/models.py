@@ -69,7 +69,7 @@ class Content(models.Model):
     published_at = models.DateTimeField(null=True, blank=True)
     is_published = models.BooleanField(default=True) 
     views = models.PositiveIntegerField(default=0)
-    featured_image = models.ImageField(upload_to='content_images/', null=True, blank=True)
+    #featured_image = models.ImageField(upload_to='content_images/', null=True, blank=True)
     metadata = JSONField(default=dict)
     search_vector = SearchVectorField(null=True)
 

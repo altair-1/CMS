@@ -17,7 +17,7 @@ class ContentForm(forms.ModelForm):
 
     class Meta:
         model = Content
-        fields = ['title', 'body', 'categories', 'new_category', 'featured_image']
+        fields = ['title', 'body', 'categories', 'new_category']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter title'}),
             'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Write your content here'}),
@@ -48,29 +48,10 @@ class ContentForm(forms.ModelForm):
                 raise ValidationError("Image file size cannot exceed 5MB.")
         return featured_image
 
-
-
-class CommentForm(forms.ModelForm):
-    class Meta:
-        model = Comment
-        fields = ['body']
-        labels = {
-            'body': '',  # This removes the label
-        }
-        widgets = {
-            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write your comment here'}),
-        }
-
-    def clean_body(self):
-        body = self.cleaned_data.get('body')
-        if len(body) < 5:
-            raise ValidationError("Comment must be at least 5 characters long.")
-        return body
-    
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['title', 'file']
+        fields = ['file', 'title']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter document title'}),
             'file': forms.FileInput(attrs={'class': 'form-control-file'}),
@@ -94,3 +75,20 @@ class DocumentForm(forms.ModelForm):
             raise ValidationError("Please provide a title for the uploaded document.")
 
         return cleaned_data
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['body']
+        labels = {
+            'body': '',  # This removes the label
+        }
+        widgets = {
+            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write your comment here'}),
+        }
+
+    def clean_body(self):
+        body = self.cleaned_data.get('body')
+        if len(body) < 5:
+            raise ValidationError("Comment must be at least 5 characters long.")
+        return body

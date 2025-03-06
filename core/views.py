@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -95,6 +96,8 @@ def create_content(request):
             content.slug = unique_slug
 
             content.save()
+            content_form.save_m2m()  # Save many-to-many relationships
+
             if categories:
                 content.categories.set(categories)
 
@@ -143,59 +146,61 @@ def dashboard(request):
     if request.method == 'POST':
         content_form = ContentForm(request.POST, request.FILES)
         document_form = DocumentForm(request.POST, request.FILES)
-        
+
         if content_form.is_valid():
+            # Save content
             content = content_form.save(commit=False)
             content.author = request.user
             content.is_published = True
             content.published_at = timezone.now()
             content.save()
-            
+
             # Handle categories
             categories = content_form.cleaned_data.get('categories')
             new_category_name = content_form.cleaned_data.get('new_category')
-            
+
             if new_category_name:
-                new_category, _ = Category.objects.get_or_create(name=new_category_name)
-                categories = list(categories) if categories else []
-                categories.append(new_category)
-            
+                category, _ = Category.objects.get_or_create(name=new_category_name)
+                if categories:
+                    categories = list(categories) + [category]
+                else:
+                    categories = [category]
+
             if categories:
                 content.categories.set(categories)
-            
+
             # Handle document upload only if a file is provided
             if 'file' in request.FILES:
                 if document_form.is_valid():
                     document = document_form.save(commit=False)
-                    document.uploaded_by = request.user
                     document.content = content
+                    document.uploaded_by = request.user
                     document.save()
                 else:
                     for field, errors in document_form.errors.items():
                         for error in errors:
                             messages.warning(request, f"Document {field}: {error}")
-            
+
             messages.success(request, 'Content created successfully!')
             return redirect('content_list')
         else:
             for field, errors in content_form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field.capitalize()}: {error}")
-            print("Content form errors:", content_form.errors)
+
     else:
         content_form = ContentForm()
         document_form = DocumentForm()
-    
+
     categories = Category.objects.all()
     contents = Content.objects.filter(author=request.user).order_by('-created_at')[:5]
-    
+
     return render(request, 'core/dashboard.html', {
         'content_form': content_form,
         'document_form': document_form,
         'categories': categories,
         'contents': contents,
     })
-
 
 @login_required
 def edit_content(request, slug):

@@ -4,7 +4,6 @@
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/custom_radio.css' %}">
 <style>
     body {
         font-family: 'Inter', sans-serif;
@@ -65,44 +64,52 @@
     <div class="dashboard-container">
         {% if user.is_authenticated %}
             <h2 class="content-title">Create New Content</h2>
+            
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
+                {{ content_form.non_field_errors }}
                 <div class="form-group">
                     {{ content_form.title.label_tag }}
                     {{ content_form.title|add_class:"form-control" }}
+                    {{ content_form.title.errors }}
                 </div>
                 <div class="form-group">
                     {{ content_form.body.label_tag }}
                     {{ content_form.body|add_class:"form-control" }}
+                    {{ content_form.body.errors }}
                 </div>
+                <!-- Category Section -->
                 <div class="form-group">
-                    <label>Category:</label>
-                    <div class="custom-radio-group">
-                    {% for category in categories %}
-                    <div class="custom-radio">
-                    <input type="radio" name="category" id="category_{{ category.id }}" value="{{ category.id }}">
-                    <label for="category_{{ category.id }}">{{ category.name }}</label>
-                    </div>
-                    {% endfor %}
-                    <div class="custom-radio">
-                    <input type="radio" name="category" id="category_new" value="new">
-                    <label for="category_new">Create new category</label>
-                    </div>
-                    </div>
-                    <div id="new-category-input" style="display: none;">
-                    <input type="text" class="form-control mt-2" name="new_category" placeholder="Enter new category name">
-                    </div>
+                    <label for="category-select">Category:</label>
+                    <select name="category" id="category-select" class="form-control">
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                        <option value="new">Create new category</option>
+                    </select>
                 </div>
+                <!-- New Category Input -->
+                <div class="form-group" id="new-category-input" style="display: none;">
+                    <label for="new_category">New Category:</label>
+                    <input type="text" class="form-control mt-2" name="new_category" id="new_category" placeholder="Enter new category name">
+                </div>
+                <!-- Document Upload Section -->
                 <div class="form-group">
-                    <label for="id_file">Upload Document</label>
+                    <label for="id_file">Upload Document (optional)</label>
                     {{ document_form.file|add_class:"form-control-file" }}
+                    {{ document_form.file.errors }}
                 </div>
+                <!-- Document Title Section -->
                 <div class="form-group" id="document-title-group" style="display: none;">
-                    <label for="id_title">Document Title</label>
+                    <label for="id_title">Document Title (if uploading)</label>
                     {{ document_form.title|add_class:"form-control" }}
+                    {{ document_form.title.errors }}
                 </div>
+                <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary">Create Content</button>
             </form>
+
             {% if messages %}
                 {% for message in messages %}
                 <div class="{% if message.tags %}alert alert-{{ message.tags }}{% endif %}" role="alert">
@@ -110,9 +117,14 @@
                 </div>
                 {% endfor %}
             {% endif %}
+            {% if content_form.errors %}
+                <div class="alert alert-danger">
+                    {{ content_form.errors }}
+                </div>
+            {% endif %}
         {% else %}
             <p class="lead">Please log in to access your dashboard.</p>
-        {% endif %}
+        {% endif %} <!-- Properly closed the if block -->
     </div>
 </div>
 {% endblock %}
@@ -120,19 +132,21 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const categoryOptions = document.querySelector('.custom-radio-group');
+    const categorySelect = document.getElementById('category-select');
     const newCategoryInput = document.getElementById('new-category-input');
     const fileInput = document.getElementById('id_file');
     const documentTitleGroup = document.getElementById('document-title-group');
 
-    categoryOptions.addEventListener('change', function(event) {
-        if (event.target.value === 'new') {
+    // Show/hide "Enter new category name" field based on selection
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'new') {
             newCategoryInput.style.display = 'block';
         } else {
             newCategoryInput.style.display = 'none';
         }
     });
 
+    // Show/hide "Document Title" field based on file selection
     fileInput.addEventListener('change', function() {
         if (this.files.length > 0) {
             documentTitleGroup.style.display = 'block';
