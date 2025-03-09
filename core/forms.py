@@ -1,14 +1,22 @@
 from django import forms
-from .models import Content, Comment, Category, Document
+from .models import Content, Document, Category, Comment
 from django.core.exceptions import ValidationError
 
 
 class ContentForm(forms.ModelForm):
+    title = forms.CharField(
+        max_length=200,
+        required=True,
+        error_messages={'required': 'Please enter a title for your content'},
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter title'})
+    )
+    
     categories = forms.ModelMultipleChoiceField(
         queryset=Category.objects.all(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         required=False
     )
+    
     new_category = forms.CharField(
         max_length=100,
         required=False,
@@ -19,7 +27,6 @@ class ContentForm(forms.ModelForm):
         model = Content
         fields = ['title', 'body', 'categories', 'new_category']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter title'}),
             'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Write your content here'}),
             'featured_image': forms.FileInput(attrs={'class': 'form-control-file'}),
         }
@@ -48,7 +55,11 @@ class ContentForm(forms.ModelForm):
                 raise ValidationError("Image file size cannot exceed 5MB.")
         return featured_image
 
+
 class DocumentForm(forms.ModelForm):
+    file = forms.FileField(required=False)
+    title = forms.CharField(required=False)
+
     class Meta:
         model = Document
         fields = ['file', 'title']
@@ -56,8 +67,6 @@ class DocumentForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter document title'}),
             'file': forms.FileInput(attrs={'class': 'form-control-file'}),
         }
-
-    file = forms.FileField(required=False)
 
     def clean_file(self):
         file = self.cleaned_data.get('file')
@@ -68,8 +77,8 @@ class DocumentForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        title = cleaned_data.get('title')
         file = cleaned_data.get('file')
+        title = cleaned_data.get('title')
 
         if file and not title:
             raise ValidationError("Please provide a title for the uploaded document.")

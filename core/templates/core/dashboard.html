@@ -70,9 +70,9 @@
                 {{ content_form.non_field_errors }}
                 <div class="form-group">
                     {{ content_form.title.label_tag }}
-                    {{ content_form.title|add_class:"form-control" }}
+                    {{ content_form.title }}
                     {{ content_form.title.errors }}
-                </div>
+                </div>                
                 <div class="form-group">
                     {{ content_form.body.label_tag }}
                     {{ content_form.body|add_class:"form-control" }}
@@ -97,22 +97,24 @@
                 <!-- Document Upload Section -->
                 <div class="form-group">
                     <label for="id_file">Upload Document (optional)</label>
-                    {{ document_form.file|add_class:"form-control-file" }}
-                    {{ document_form.file.errors }}
+                    <input type="file" name="file" id="id_file" class="form-control-file">
                 </div>
+
                 <!-- Document Title Section -->
                 <div class="form-group" id="document-title-group" style="display: none;">
-                    <label for="id_title">Document Title (if uploading)</label>
-                    {{ document_form.title|add_class:"form-control" }}
-                    {{ document_form.title.errors }}
+                    <label for="id_document_title">Document Title <span class="text-danger">*</span></label>
+                    <input type="text" name="document_title" id="id_document_title" class="form-control" placeholder="Enter document title">
+                    <small class="form-text text-muted">Required when uploading a document</small>
                 </div>
+
+
                 <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary">Create Content</button>
             </form>
 
             {% if messages %}
                 {% for message in messages %}
-                <div class="{% if message.tags %}alert alert-{{ message.tags }}{% endif %}" role="alert">
+                <div class="{% if message.tags %}alert alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
                     {{ message }}
                 </div>
                 {% endfor %}
@@ -122,9 +124,14 @@
                     {{ content_form.errors }}
                 </div>
             {% endif %}
+            {% if document_form.errors %}
+                <div class="alert alert-warning">
+                    {{ document_form.errors }}
+                </div>
+            {% endif %}
         {% else %}
             <p class="lead">Please log in to access your dashboard.</p>
-        {% endif %} <!-- Properly closed the if block -->
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -136,6 +143,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const newCategoryInput = document.getElementById('new-category-input');
     const fileInput = document.getElementById('id_file');
     const documentTitleGroup = document.getElementById('document-title-group');
+    const documentTitleInput = document.getElementById('id_document_title');
+    const form = document.querySelector('form');
 
     // Show/hide "Enter new category name" field based on selection
     categorySelect.addEventListener('change', function() {
@@ -150,8 +159,20 @@ document.addEventListener('DOMContentLoaded', function() {
     fileInput.addEventListener('change', function() {
         if (this.files.length > 0) {
             documentTitleGroup.style.display = 'block';
+            documentTitleInput.required = true; // Make the field required
         } else {
             documentTitleGroup.style.display = 'none';
+            documentTitleInput.required = false; // Make the field not required
+            documentTitleInput.value = '';
+        }
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(event) {
+        if (fileInput.files.length > 0 && !documentTitleInput.value.trim()) {
+            event.preventDefault();
+            alert('Please provide a title for the uploaded document.');
+            documentTitleInput.focus();
         }
     });
 });

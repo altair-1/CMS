@@ -145,8 +145,10 @@ def create_content(request):
 def dashboard(request):
     if request.method == 'POST':
         content_form = ContentForm(request.POST, request.FILES)
-        document_form = DocumentForm(request.POST, request.FILES)
-
+        document_form = DocumentForm()  # Initialize document_form
+        print("POST data:", request.POST)
+        
+        # Process content form
         if content_form.is_valid():
             # Save content
             content = content_form.save(commit=False)
@@ -157,41 +159,55 @@ def dashboard(request):
 
             # Handle categories
             categories = content_form.cleaned_data.get('categories')
-            new_category_name = content_form.cleaned_data.get('new_category')
-
-            if new_category_name:
+            new_category_name = request.POST.get('new_category')
+            category_id = request.POST.get('category')
+            
+            # Handle new category
+            if category_id == 'new' and new_category_name:
                 category, _ = Category.objects.get_or_create(name=new_category_name)
-                if categories:
-                    categories = list(categories) + [category]
-                else:
-                    categories = [category]
+                content.categories.add(category)
+            # Handle existing category
+            elif category_id and category_id != 'new':
+                try:
+                    category = Category.objects.get(id=int(category_id))
+                    content.categories.add(category)
+                except (ValueError, Category.DoesNotExist):
+                    pass
 
-            if categories:
-                content.categories.set(categories)
-
-            # Handle document upload only if a file is provided
-            if 'file' in request.FILES:
-                if document_form.is_valid():
-                    document = document_form.save(commit=False)
-                    document.content = content
-                    document.uploaded_by = request.user
+            # Handle document upload ONLY IF file is provided
+            if 'file' in request.FILES and request.FILES['file']:
+                document_title = request.POST.get('document_title', '').strip()
+                if document_title:
+                    document = Document(
+                        title=document_title,
+                        file=request.FILES['file'],
+                        content=content,
+                        uploaded_by=request.user
+                    )
                     document.save()
+                    messages.info(request, f"Document '{document_title}' attached successfully.")
                 else:
-                    for field, errors in document_form.errors.items():
-                        for error in errors:
-                            messages.warning(request, f"Document {field}: {error}")
+                    # If no title is provided but a file is uploaded, show error and don't redirect
+                    messages.error(request, "Document title is required when uploading a file.")
+                    # Return to the form instead of redirecting
+                    return render(request, 'core/dashboard.html', {
+                        'content_form': ContentForm(request.POST),  # Preserve the form data
+                        'document_form': document_form,
+                        'categories': Category.objects.all(),
+                        'contents': Content.objects.filter(author=request.user).order_by('-created_at')[:5],
+                    })
 
             messages.success(request, 'Content created successfully!')
             return redirect('content_list')
         else:
+            print("Form errors:", content_form.errors)
             for field, errors in content_form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field.capitalize()}: {error}")
-
     else:
         content_form = ContentForm()
         document_form = DocumentForm()
-
+    
     categories = Category.objects.all()
     contents = Content.objects.filter(author=request.user).order_by('-created_at')[:5]
 
@@ -201,6 +217,8 @@ def dashboard(request):
         'categories': categories,
         'contents': contents,
     })
+
+
 
 @login_required
 def edit_content(request, slug):

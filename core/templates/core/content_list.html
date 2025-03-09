@@ -64,20 +64,16 @@
             <h3>{{ selected_content.title }}</h3>
             <p class="text-muted">
                 <small>
-                    <i class="fas fa-user"></i> {{ selected_content.author.username }} |
+                    <i class="fas fa-user"></i> {{ selected_content.author.username }} | 
                     <i class="fas fa-calendar"></i> {{ selected_content.created_at|date:"F d, Y" }}
+                    {% if selected_content.categories.all %} | 
+                    <i class="fas fa-tags"></i> 
+                    {% for category in selected_content.categories.all %}
+                        {{ category.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    {% endif %}
                 </small>
             </p>
-            {% if selected_content.categories.all %}
-                <p class="text-muted">
-                    <small>
-                        <i class="fas fa-tags"></i> 
-                        {% for category in selected_content.categories.all %}
-                            {{ category.name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </small>
-                </p>
-            {% endif %}
             <div class="content-body mt-4">
                 {{ selected_content.body|linebreaks }}
             </div>
@@ -91,7 +87,8 @@
             {% endif %}
         {% else %}
             <p>Select a content item from the list to view details.</p>
-        {% endif %}
-    </div>
+    {% endif %}
+</div>
+
 </div>
 {% endblock %}
