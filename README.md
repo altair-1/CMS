@@ -34,3 +34,4 @@ Please adhere to the project's code style, add tests for new features and ensure
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details
+This project is licensed under the MIT License - see the LICENSE.md file for details
