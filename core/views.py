@@ -13,9 +13,7 @@ from django.db import transaction, connection
 
 
 def home(request):
-    latest_content = Content.objects.filter(is_published=True).order_by('-published_at')[:5]
-    categories = Category.objects.all()
-    return render(request, 'core/home.html', {'latest_content': latest_content, 'categories': categories})
+    return render(request, 'core/home.html')
 
 
 def content_list(request):
@@ -34,10 +32,16 @@ def content_list(request):
     categories = Category.objects.all()
 
     selected_content = None
+    comments = None  # Initialize comments variable
+    
     if request.GET.get('content_id'):
         selected_content = get_object_or_404(Content, id=request.GET.get('content_id'))
+        # Get comments for the selected content
+        comments = Comment.objects.filter(content=selected_content).order_by('-created_at')
     elif contents:
         selected_content = contents[0]
+        # Get comments for the first content if no specific content is selected
+        comments = Comment.objects.filter(content=selected_content).order_by('-created_at')
 
     context = {
         'contents': contents,
@@ -45,9 +49,11 @@ def content_list(request):
         'query': query,
         'selected_category': category,
         'selected_content': selected_content,
+        'comments': comments,  # Add comments to the context
     }
 
     return render(request, 'core/content_list.html', context)
+
 
 def content_detail(request, slug):
     content = get_object_or_404(
@@ -223,27 +229,47 @@ def dashboard(request):
 @login_required
 def edit_content(request, slug):
     content = get_object_or_404(Content, slug=slug, author=request.user)
+    
     if request.method == 'POST':
         form = ContentForm(request.POST, instance=content)
+        
+        # Store current categories to preserve them if form validation fails
+        current_categories = list(content.categories.all())
+        
         if form.is_valid():
             updated_content = form.save(commit=False)
 
             if updated_content.is_published and not content.published_at:
                 updated_content.published_at = timezone.now()
 
-            category_choice = form.cleaned_data.get('category')
-            new_category_name = form.cleaned_data.get('new_category')
-
-            if category_choice == 'new' and new_category_name:
-                category, created = Category.objects.get_or_create(name=new_category_name)
-            elif category_choice and category_choice != 'new':
-                category = Category.objects.get(id=int(category_choice))
-            else:
-                category = None
-
+            # Save the content first
             updated_content.save()
-            if category:
-                updated_content.categories.set([category])  # Replace existing categories
+            
+            # Handle categories
+            category_id = request.POST.get('category')
+            new_category_name = request.POST.get('new_category')
+            
+            # Clear existing categories if we're going to set new ones
+            if (category_id and category_id != 'new') or (category_id == 'new' and new_category_name):
+                updated_content.categories.clear()
+            
+            # Add selected category
+            if category_id and category_id != 'new':
+                try:
+                    category = Category.objects.get(id=int(category_id))
+                    updated_content.categories.add(category)
+                except (ValueError, Category.DoesNotExist):
+                    pass
+            
+            # Add new category if created
+            elif category_id == 'new' and new_category_name:
+                category, created = Category.objects.get_or_create(name=new_category_name)
+                updated_content.categories.add(category)
+            
+            # If no categories were added but there were categories before, restore them
+            if not updated_content.categories.exists() and current_categories:
+                for category in current_categories:
+                    updated_content.categories.add(category)
 
             messages.success(request, 'Content updated successfully!')
             return redirect('content_detail', slug=updated_content.slug)
@@ -251,12 +277,14 @@ def edit_content(request, slug):
             messages.error(request, 'There was an error updating the content. Please check the form.')
             print(form.errors)
     else:
-        initial_data = {
-            'category': content.categories.first().id if content.categories.exists() else None,
-        }
+        # For GET requests, pre-populate the form
+        initial_data = {}
+        if content.categories.exists():
+            initial_data['category'] = content.categories.first().id
+        
         form = ContentForm(instance=content, initial=initial_data)
 
-    return render(request, 'core/edit_content.html', {'form': form, 'content': content})
+    return render(request, 'core/edit_content.html', {'form': form, 'content': content, 'categories': Category.objects.all()})
 
 
 @login_required
@@ -273,20 +301,19 @@ def delete_content(request, slug):
 @login_required
 def add_comment(request, slug):
     content = get_object_or_404(Content, slug=slug)
+    
     if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.content = content
-            comment.author = request.user
-            comment.save()
-            messages.success(request, 'Your comment has been added and is awaiting approval.')
+        comment_text = request.POST.get('comment_text')
+        if comment_text:
+            Comment.objects.create(
+                content=content,
+                author=request.user,
+                body=comment_text
+            )
+            messages.success(request, 'Comment added successfully!')
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"Error in {field}: {error}")
-            print(form.errors)  # For debugging
-
+            messages.error(request, 'Comment cannot be empty.')
+    
     return redirect('content_detail', slug=slug)
 
 

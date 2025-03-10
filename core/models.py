@@ -152,7 +152,7 @@ class Comment(models.Model):
         ]
 
     def __str__(self):
-        return f'Comment by {self.author} on {self.content}'
+        return f'Comment by {self.author.username} on {self.content.title}'
 
     def approve(self):
         self.is_approved = True

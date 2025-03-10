@@ -35,10 +35,19 @@ class ContentForm(forms.ModelForm):
         cleaned_data = super().clean()
         categories = cleaned_data.get('categories')
         new_category = cleaned_data.get('new_category')
-
-        if not categories and not new_category:
+        
+        # Check if a category was selected from the dropdown
+        category_id = self.data.get('category')
+        
+        # Skip validation if this is an edit of existing content with categories
+        if self.instance and self.instance.pk and self.instance.categories.exists():
+            return cleaned_data
+            
+        # Only validate if neither categories nor dropdown category nor new category is provided
+        if not categories and not new_category and not (category_id and category_id != 'new'):
             raise ValidationError("Please select at least one category or create a new one.")
 
+        # Handle new category creation
         if new_category:
             category, created = Category.objects.get_or_create(name=new_category)
             if not categories:
