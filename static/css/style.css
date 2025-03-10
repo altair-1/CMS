@@ -1,0 +1,187 @@
+/* Global Styles */
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    font-size: 16px;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Container Styling */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.content-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Dashboard-Specific Styles */
+.dashboard-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-top: 30px;
+}
+
+/* Heading Styles */
+h1, h2, h3 {
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 2.5rem; /* Larger size for main titles */
+}
+
+h2 {
+    font-size: 2rem; /* Section titles */
+}
+
+h3 {
+    font-size: 1.5rem; /* Subtitles */
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.form-control-file {
+    padding-top: 10px;
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: #4e73df !important; /* Custom primary color */
+    border-color: #4e73df !important; /* Match the button border */
+    padding: 12px 20px !important; /* Larger button size */
+    font-size: 16px !important; /* Larger text size */
+}
+
+.btn-primary:hover {
+    background-color: #375a9e !important; /* Slightly darker hover effect */
+}
+
+/* Custom Radio Buttons (from custom_radio.css) */
+.custom-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Increased spacing between radio buttons */
+}
+
+.custom-radio {
+    position: relative;
+    padding-left: 35px; /* Adjusted for larger radio buttons */
+    cursor: pointer;
+}
+
+.custom-radio input {
+    position: absolute;
+    opacity: 0;
+}
+
+.custom-radio label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -2px; /* Adjusted alignment */
+    width: 24px; /* Larger circle size */
+    height: 24px; /* Larger circle size */
+    border-radius: 50%;
+    border: 2px solid #007bff; /* Primary color for border */
+}
+
+.custom-radio input:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 6px; /* Adjusted for larger circle */
+    top: 6px; /* Adjusted for larger circle */
+    width: 12px; /* Inner circle size */
+    height: 12px; /* Inner circle size */
+    border-radius: 50%;
+    background-color: #007bff; /* Primary color for checked state */
+}
+
+.custom-radio label {
+    font-size: 16px; /* Slightly larger text for readability */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: none; /* Remove shadow on smaller screens for simplicity */
+        border-radius: 5px;
+        background-color:#fff
+        ;
+        
+}
+}
+
+.document-link {
+    display: inline-flex;
+    align-items: center;
+    color: #0d6efd;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+}
+
+.document-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+.documents-section {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 20px;
+}
+
+.comments-section {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.comment-meta {
+    margin-bottom: 0;
+}
+
+.add-comment-form {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.btn-primary, .btn-secondary {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.content-title {
+    font-weight: 500;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+  }
+  
+  .content-header {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+  }  

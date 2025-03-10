@@ -1,0 +1,60 @@
+.custom-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Increased gap for better spacing */
+}
+
+.custom-radio {
+    position: relative;
+    padding-left: 35px; /* Increased padding for larger radio buttons */
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 10px; /* Added margin for vertical spacing */
+}
+
+.custom-radio input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.custom-radio label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -2px; /* Adjusted for better alignment */
+    width: 24px; /* Slightly larger radio button */
+    height: 24px;
+    border: 2px solid #4e73df; /* Changed to match the new color scheme */
+    border-radius: 50%;
+    background-color: #fff;
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.custom-radio input:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 6px; /* Adjusted for the new size */
+    top: 4px;
+    width: 12px; /* Adjusted inner circle size */
+    height: 12px;
+    border-radius: 50%;
+    background-color: #4e73df; /* Changed to match the new color scheme */
+    transition: all 0.3s ease;
+}
+
+.custom-radio label {
+    font-size: 16px;
+    line-height: 24px; /* Increased line height for better readability */
+    color: #333; /* Ensuring good contrast */
+}
+
+/* Hover effect */
+.custom-radio:hover label::before {
+    border-color: #375a9e; /* Darker shade on hover */
+}
+
+/* Focus styles for accessibility */
+.custom-radio input:focus + label::before {
+    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.3); /* Subtle focus ring */
+}
